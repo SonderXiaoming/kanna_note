@@ -1,7 +1,5 @@
 # 环奈笔记
 
-
-
 《Princess Connect Re:Dive》辅助工具
 
 ### ★ 如果你喜欢的话，请给仓库点一个star支持一下23333 ★
@@ -54,9 +52,19 @@ git clone https://github.com/SonderXiaoming/kanna_note
 * 前面#号表示查询ID
 * 例：@bot简介#1701
 * 例：@bot技能#1064d5 (1064为公会战ID，d5为阶段id)
-  会战ID可以使用公会战信息查询
-  不写会自动查找角色存在的服务器
-  优先级 国服>台服>日服
+* 会战ID可以使用公会战信息查询
+* 不写会自动查找角色存在的服务器
+* 优先级 国服>台服>日服
+
+## 演示
+
+![f83157d3b7fe674cd6043c7cb57f24c6_720](https://github.com/user-attachments/assets/a5c11128-f327-47eb-9086-937659feb317)
+
+![img3](https://github.com/user-attachments/assets/0a95de4b-efe5-4eae-a650-78be37af911b)
+
+![img2](https://github.com/user-attachments/assets/e336701c-a62b-4fb1-bbcd-8d77a688405a) 
+
+![img4](https://github.com/user-attachments/assets/72818a8e-9a02-4a17-9b37-6b0d8f39155d)
 
 ## 项目参考
 
