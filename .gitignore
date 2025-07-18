@@ -5,3 +5,14 @@ resource/img/enemy/*.png
 resource/img/equipment/*.png
 resource/img/teaser/*.png
 resource/img/skill_icon/*.png
+#平A
+!resource/img/skill_icon/1.png
+#占位
+!resource/img/enemy/300201.png
+!resource/img/teaser/10072.png
+!resource/img/fullcard/fullcard_unit_170131.png
+# 环奈专武
+!resource/img/equipment/137011.png 
+!resource/img/equipment/137021.png 
+
+
