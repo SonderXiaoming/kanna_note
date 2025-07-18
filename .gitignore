@@ -1,0 +1,7 @@
+__pycache__
+*.db
+resource/img/fullcard/*.png
+resource/img/enemy/*.png
+resource/img/equipment/*.png
+resource/img/teaser/*.png
+resource/img/skill_icon/*.png
