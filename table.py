@@ -1142,3 +1142,12 @@ class UnitTalent(PCRModel, table=True):
     unit_id: int
     talent_id: int
 
+class AbyssScheduleData(PCRModel, table=True):
+    __tablename__ = "abyss_schedule"
+
+    abyss_id: int = Field(primary_key=True)
+    start_time: str
+    end_time: str
+    talent_id: int
+    boss_ticket_id: int
+    title: str

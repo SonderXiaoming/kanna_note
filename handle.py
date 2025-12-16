@@ -570,6 +570,10 @@ async def get_schedule(type_: str = None, data: PCRDatabase = None):
         calendar_event_list += await data.get_colosseum_event()
     except Exception as e:
         logger.warning(f"获取斗技场事件失败: {e}")
+    try:
+        calendar_event_list += await data.get_abyss_schedule(limit=2)
+    except Exception as e:
+        logger.warning(f"获取深渊讨伐战事件失败: {e}")
 
     is_fix_jp = type_ == "jp"
     in_progress_list, coming_soon_list = fliter_event_list(

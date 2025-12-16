@@ -768,7 +768,8 @@ class CalendarEventType(Enum):
     SHRINE = 37
     TEMPLE = 38
     DUNGEON = 45
-
+    ABYSS = -4
+    
     @classmethod
     def get_by_value(cls, value: int) -> "CalendarEventType":
         return next((item for item in cls if item.value == value), cls.UNKNOWN)

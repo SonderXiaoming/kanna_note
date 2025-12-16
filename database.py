@@ -16,6 +16,7 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from .base import FilePath
 from .table import (
+    AbyssScheduleData,
     AilmentData,
     CampaignFreegacha,
     CampaignSchedule,
@@ -1249,7 +1250,30 @@ class PCRDatabase:
             ]
         else:
             return []
+        
+    @session
+    async def get_abyss_schedule(self, session: AsyncSession, limit: int = 1):
 
+        query = (
+            select(
+                literal(-4).label("type"),
+                AbyssScheduleData.talent_id.label("value"),
+                AbyssScheduleData.start_time,
+                AbyssScheduleData.end_time,
+            )
+            .order_by(AbyssScheduleData.abyss_id.desc())
+            .limit(limit)
+        )
+
+        result = await session.execute(query)
+        if result := result.fetchall():
+            return [
+                CalendarEvent(**dict(zip(CalendarEvent.__annotations__.keys(), item)))
+                for item in result
+            ]
+        else:
+            return []
+        
     @session
     async def get_birthday_list(
         self,

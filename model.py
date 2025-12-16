@@ -230,6 +230,16 @@ class CalendarEvent:
             events.append(CalendarEventData("次元断层", "", ""))
         elif event_type == CalendarEventType.COLOSSEUM:
             events.append(CalendarEventData("斗技场", "", ""))
+        elif event_type == CalendarEventType.ABYSS:
+            abyss_map = {
+                1: ("-火", Color.red.value),
+                2: ("-水", Color.blue.value),
+                3: ("-风", Color.green.value),
+                4: ("-光", Color.gold.value),
+                5: ("-暗", Color.purple.value)
+            }
+            talent_text, front_color = abyss_map.get(self.value, "")     
+            events.append(CalendarEventData("深渊讨伐战", talent_text, "", front_color))
         else:
             try:
                 list_of_types = list(map(int, self.type.split("-")))
