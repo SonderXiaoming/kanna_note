@@ -1009,6 +1009,7 @@ class ActionHandler:
             self.action.action_value_7,
             damage,
             tp + time,
+            "",
         )
 
     # 37：治疗领域展开
@@ -1024,7 +1025,7 @@ class ActionHandler:
             5, self.action.action_value_5, self.action.action_value_6
         )
         return StringResources.get(
-            "skill_action_type_desc_field", self.action.action_value_7, heal, time
+            "skill_action_type_desc_field", self.action.action_value_7, heal, time, ""
         )
 
     # 38：buff/debuff领域展开
@@ -1057,10 +1058,7 @@ class ActionHandler:
             "skill_action_type_desc_38_action", self.action.action_detail_1 % 100
         )
         return self.get_target() + StringResources.get(
-            "skill_action_type_desc_field",
-            self.action.action_value_3,
-            action,
-            time,
+            "skill_action_type_desc_field", self.action.action_value_3, action, time, ""
         )
 
     # 53：特殊状态：领域存在时；如：情姐
@@ -1100,7 +1098,7 @@ class ActionHandler:
             3, self.action.action_value_3, self.action.action_value_4
         )
         return StringResources.get(
-            "skill_action_type_desc_field", self.action.action_value_5, tp, time
+            "skill_action_type_desc_field", self.action.action_value_5, tp, time, ""
         )
 
     # 35：特殊标记
@@ -2321,6 +2319,7 @@ class ActionHandler:
                     self.action.action_value_5,
                     desc_text,
                     time,
+                    "",
                 )
             else:
                 return f"{self.tag}{self.get_target()}，{desc_text}{time}"
