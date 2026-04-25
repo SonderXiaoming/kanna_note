@@ -95,7 +95,7 @@ def draw_event_banner(
             5,
             font_cn,
             "#ffffff",
-            Color.red.value,
+            Color.primary.value,
             margin=10,
         )
         width += int(font_cn.getlength(time)) + 15
@@ -112,7 +112,7 @@ def draw_event_banner(
             padding = 5
         elif now < end:
             left_time = end - datetime.datetime.now()  # 距离结束时间
-            color = Color.red.value
+            color = Color.primary.value
             icon = ALARM_CLOCK_ICON
             padding = 0
 
@@ -372,7 +372,7 @@ async def draw_birthday(event: BirthdayData):
         5,
         font_cn,
         "#ffffff",
-        Color.purple.value if left_time.days else Color.red.value,
+        Color.purple.value if left_time.days else Color.primary.value,
         margin=10,
     )
 

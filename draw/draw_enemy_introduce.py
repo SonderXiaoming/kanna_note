@@ -15,7 +15,7 @@ def draw_full_parameter_info(
     font: ImageFont.FreeTypeFont,
 ):
     draw_text_with_base(
-        draw, "HP", MARGIN, height, font, "#ffffff", Color.red.value, margin=10
+        draw, "HP", MARGIN, height, font, "#ffffff", Color.primary.value, margin=10
     )
     draw.text(
         (WIDTH - MARGIN, height + 8), str(parameter.hp), "#000000", font, anchor="rt"
@@ -23,7 +23,7 @@ def draw_full_parameter_info(
     height += 30
 
     draw_text_with_base(
-        draw, "命中", MARGIN, height, font, "#ffffff", Color.red.value, margin=10
+        draw, "命中", MARGIN, height, font, "#ffffff", Color.primary.value, margin=10
     )
     draw.text(
         (WIDTH - MARGIN, height + 8),
@@ -35,7 +35,7 @@ def draw_full_parameter_info(
     height += 30
 
     draw_text_with_base(
-        draw, "物理攻击力", MARGIN, height, font, "#ffffff", Color.red.value, margin=10
+        draw, "物理攻击力", MARGIN, height, font, "#ffffff", Color.primary.value, margin=10
     )
     draw.text(
         (WIDTH - MARGIN, height + 8), str(parameter.atk), "#000000", font, anchor="rt"
@@ -43,7 +43,7 @@ def draw_full_parameter_info(
     height += 30
 
     draw_text_with_base(
-        draw, "魔法攻击力", MARGIN, height, font, "#ffffff", Color.red.value, margin=10
+        draw, "魔法攻击力", MARGIN, height, font, "#ffffff", Color.primary.value, margin=10
     )
     draw.text(
         (WIDTH - MARGIN, height + 8),
@@ -55,7 +55,7 @@ def draw_full_parameter_info(
     height += 30
 
     draw_text_with_base(
-        draw, "物理防御力", MARGIN, height, font, "#ffffff", Color.red.value, margin=10
+        draw, "物理防御力", MARGIN, height, font, "#ffffff", Color.primary.value, margin=10
     )
     draw.text(
         (WIDTH - MARGIN, height + 8), str(parameter.def_), "#000000", font, anchor="rt"
@@ -63,7 +63,7 @@ def draw_full_parameter_info(
     height += 30
 
     draw_text_with_base(
-        draw, "魔法防御力", MARGIN, height, font, "#ffffff", Color.red.value, margin=10
+        draw, "魔法防御力", MARGIN, height, font, "#ffffff", Color.primary.value, margin=10
     )
     draw.text(
         (WIDTH - MARGIN, height + 8),
@@ -74,7 +74,7 @@ def draw_full_parameter_info(
     )
     height += 30
     draw_text_with_base(
-        draw, "TP上升", MARGIN, height, font, "#ffffff", Color.red.value, margin=10
+        draw, "TP上升", MARGIN, height, font, "#ffffff", Color.primary.value, margin=10
     )
     draw.text(
         (WIDTH - MARGIN, height + 8),
@@ -130,7 +130,7 @@ async def draw_enemy_introduce(
         height += 40
     if sub_parameters:
         draw_text_with_base(
-            draw, "HP", MARGIN, height, font_cn, "#ffffff", Color.red.value, margin=10
+            draw, "HP", MARGIN, height, font_cn, "#ffffff", Color.primary.value, margin=10
         )
         draw.text(
             (WIDTH - MARGIN, height + 10),
@@ -141,7 +141,7 @@ async def draw_enemy_introduce(
         )
         height += 30
         draw_text_with_base(
-            draw, "命中", MARGIN, height, font_cn, "#ffffff", Color.red.value, margin=10
+            draw, "命中", MARGIN, height, font_cn, "#ffffff", Color.primary.value, margin=10
         )
         draw.text(
             (WIDTH - MARGIN, height + 10),
@@ -158,7 +158,7 @@ async def draw_enemy_introduce(
             height,
             font_cn,
             "#ffffff",
-            Color.red.value,
+            Color.primary.value,
             margin=10,
         )
         draw.text(
@@ -174,7 +174,7 @@ async def draw_enemy_introduce(
             draw.text(
                 (WIDTH // 2, height),
                 f"{parameter.name}",
-                Color.red.value,
+                Color.primary.value,
                 name_font,
                 anchor="mt",
             )

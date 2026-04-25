@@ -1,7 +1,7 @@
 from PIL import Image, ImageFont, ImageDraw
 import colorsys
 
-from ..base import FilePath, TalentType
+from ..base import Color, FilePath, TalentType, UnitRoleType
 from ..model import UnitInfo
 from ..util import (
     convert2charid,
@@ -13,18 +13,18 @@ from ..download import get_pcr_fullcard
 from .util import get_text_size, draw_text_shadow
 
 base_dict = {
-    "常驻": (136, 136, 136),
-    "限定": (239, 95, 168),
-    "兑换": (66, 170, 240),
-    "活动": (250, 90, 90),
-    "魔法": (148, 90, 254),
-    "物理": (255, 188, 51),
-    "前卫": (250, 90, 90),
-    "中卫": (255, 188, 51),
-    "后卫": (66, 170, 240),
+    "常驻": Color.gold.value,
+    "限定": Color.red.value,
+    "兑换": Color.light_blue.value,
+    "活动": Color.green.value,
+    "魔法": Color.purple.value,
+    "物理": Color.gold.value,
+    "前卫": Color.red.value,
+    "中卫": Color.gold.value,
+    "后卫":  Color.light_blue.value
 }
 
-font_colour = (255, 255, 255)
+font_colour = Color.white.value
 
 
 def get_dominant_color(image: Image.Image):
@@ -121,9 +121,19 @@ async def draw_fullcard(info: UnitInfo, unique_num=0):
         )
         base.paste(
             unique,
-            (int(width * 0.82), int(height * 0.76 - 53)),
+            (int(width * 0.71), int(height * 0.76 - 53)),
             mask=unique,
         )
+    unit_role_type = UnitRoleType.get(info.unit_role_id)
+    x, y = get_text_size(unit_role_type.name, font)
+    text_base(
+        base,
+        width * 0.84 - x / 2 - 141 / 2,
+        height * 0.75 - 47,
+        unit_role_type.color,
+    )
+    draw.text((width * 0.84 - x, height * 0.75 - y), unit_role_type.name, font_colour, font)
+    
     is_limit = limit_type_int2str(info.limit_type)
     x, y = get_text_size(is_limit, font)
     text_base(

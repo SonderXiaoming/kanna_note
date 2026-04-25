@@ -9,7 +9,7 @@ from ..base import Color
 
 WIDTH = 3200
 
-color_list = [Color.green.value, Color.gold.value, Color.purple.value, Color.red.value]
+color_list = [Color.green.value, Color.gold.value, Color.purple.value, Color.primary.value]
 
 
 def draw_title(time: str, clan_battle_id: int) -> str:
@@ -32,10 +32,10 @@ def draw_title(time: str, clan_battle_id: int) -> str:
     )
     pad = "\t" * 8
     draw_text_with_base(
-        draw, f"{pad}周目{pad}", 30, 100, font_cn, base_colour=Color.red.value
+        draw, f"{pad}周目{pad}", 30, 100, font_cn, base_colour=Color.primary.value
     )
     draw_text_with_base(
-        draw, "血量(万)", 420, 100, font_cn, base_colour=Color.red.value
+        draw, "血量(万)", 420, 100, font_cn, base_colour=Color.primary.value
     )
     pad = "\t" * 3
     for i in range(1, 9):
@@ -45,7 +45,7 @@ def draw_title(time: str, clan_battle_id: int) -> str:
             350 + i * 315,
             100,
             font_cn,
-            base_colour=Color.red.value,
+            base_colour=Color.primary.value,
         )
     return base
 

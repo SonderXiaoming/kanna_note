@@ -41,7 +41,7 @@ async def draw_introduce(info: UnitInfo):
 
     for catch_copy in catch_copy_list:
         x, y = get_text_size(catch_copy, font)
-        draw.text(((WIDTH - x) // 2, height), catch_copy, Color.red.value, font)
+        draw.text(((WIDTH - x) // 2, height), catch_copy, Color.primary.value, font)
         height += y + 20
     height += 10
 
@@ -58,13 +58,13 @@ async def draw_introduce(info: UnitInfo):
     height += 20 + len(introduce) * 45
 
     draw_text_with_base(
-        draw, "编号", MARGIN, height, font_cn, "#ffffff", Color.red.value
+        draw, "编号", MARGIN, height, font_cn, "#ffffff", Color.primary.value
     )
     draw.text((WIDTH - MARGIN, height + 10), str(id_), "#000000", font, anchor="rt")
     height += 60
 
     draw_text_with_base(
-        draw, "现实名字", MARGIN, height, font_cn, "#ffffff", Color.red.value
+        draw, "现实名字", MARGIN, height, font_cn, "#ffffff", Color.primary.value
     )
     draw.text(
         (WIDTH - MARGIN, height + 10), info.actual_name, "#000000", font, anchor="rt"
@@ -72,13 +72,13 @@ async def draw_introduce(info: UnitInfo):
     height += 60
 
     draw_text_with_base(
-        draw, "公会", MARGIN, height, font_cn, "#ffffff", Color.red.value
+        draw, "公会", MARGIN, height, font_cn, "#ffffff", Color.primary.value
     )
     draw.text((WIDTH - MARGIN, height + 10), info.guild, "#000000", font, anchor="rt")
     height += 60
 
     draw_text_with_base(
-        draw, "兴趣", MARGIN, height, font_cn, "#ffffff", Color.red.value
+        draw, "兴趣", MARGIN, height, font_cn, "#ffffff", Color.primary.value
     )
     draw.text(
         (WIDTH - MARGIN, height + 10), info.favorite, "#000000", font, anchor="rt"
@@ -86,7 +86,7 @@ async def draw_introduce(info: UnitInfo):
     height += 60
 
     draw_text_with_base(
-        draw, "血型", MARGIN, height, font_cn, "#ffffff", Color.red.value
+        draw, "血型", MARGIN, height, font_cn, "#ffffff", Color.primary.value
     )
     draw.text(
         (WIDTH // 2 - MARGIN, height + 10),
@@ -97,14 +97,14 @@ async def draw_introduce(info: UnitInfo):
     )
 
     draw_text_with_base(
-        draw, "种族", WIDTH // 2, height, font_cn, "#ffffff", Color.red.value
+        draw, "种族", WIDTH // 2, height, font_cn, "#ffffff", Color.primary.value
     )
     draw.text((WIDTH - MARGIN, height + 10), info.race, "#000000", font, anchor="rt")
     height += 60
 
     if self_text:
         draw_text_with_base(
-            draw, "介绍", MARGIN, height, font_cn, "#ffffff", Color.red.value
+            draw, "介绍", MARGIN, height, font_cn, "#ffffff", Color.primary.value
         )
         height += 60
         draw.multiline_text(

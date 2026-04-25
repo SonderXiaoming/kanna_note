@@ -39,7 +39,7 @@ async def draw_single_clan_info(
         5,
         font_cn,
         "#ffffff",
-        Color.red.value,
+        Color.primary.value,
         margin=10,
     )
     draw_text_with_base(
