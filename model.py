@@ -26,6 +26,7 @@ class UnitInfo:
     atk_type: Optional[int] = None
     normal_atk_cast_time: Optional[float] = None
     talent: int = 0
+    unit_role_id: int = 0
     intro: str = ""
     unit_start_time: str = ""
     actual_name: str = ""
@@ -252,15 +253,12 @@ class CalendarEvent:
                 multiple = self.value / 1000.0
                 if multiple in [1.5, 2.0]:
                     drop_color = Color.gold.value
-                elif multiple in [2.5, 3.0]:
-                    drop_color = Color.red.value
+                elif multiple in [2.5, 3.0] or multiple not in [4.0, 5.0]:
+                    drop_color = Color.primary.value
                 elif multiple == 4.0:
                     drop_color = Color.green.value
-                elif multiple == 5.0:
-                    drop_color = Color.orange.value
                 else:
-                    drop_color = Color.primary.value
-
+                    drop_color = Color.orange.value
                 if event_enum == CalendarEventType.LOGIN:
                     mult_text = str(self.value)
                 elif event_enum == CalendarEventType.FORTUNE:
