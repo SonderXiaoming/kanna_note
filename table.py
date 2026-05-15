@@ -1233,6 +1233,12 @@ class UnitTalent(PCRModel, table=True):
     talent_id: int
 
 
+class UnitRoleData(PCRModel, table=True):
+    __tablename__ = "unit_role_data"
+    unit_id: int = Field(primary_key=True)
+    unit_role_id: int
+
+
 class ExUniqueEquipment1(PCRModel, table=True):
     __tablename__ = "ex_unique_equipment_1"
 
@@ -1286,3 +1292,4 @@ class SevenEventSetting(PCRModel, table=True):
     introduction_10: str
     boss_enemy_id: int
     boss_unit_id: int
+

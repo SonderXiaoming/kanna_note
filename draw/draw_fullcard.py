@@ -21,7 +21,7 @@ base_dict = {
     "物理": Color.gold.value,
     "前卫": Color.red.value,
     "中卫": Color.gold.value,
-    "后卫":  Color.light_blue.value
+    "后卫": Color.light_blue.value,
 }
 
 font_colour = Color.white.value
@@ -102,7 +102,7 @@ async def draw_fullcard(info: UnitInfo, unique_num=0):
     draw = ImageDraw.Draw(base)
 
     draw.multiline_text(
-        (width * 0.85, height / 15),
+        (width * 0.83, height / 15),
         f"{info.age_int if info.age_int != -1 else '?'}岁\n"
         f"{info.birth_month_int if info.birth_month_int != -1 else '?'}月{info.birth_day_int if info.birth_day_int != -1 else '?'}日\n"
         f"{info.weight_int if info.weight_int != -1 else '?'}KG\n"
@@ -132,8 +132,10 @@ async def draw_fullcard(info: UnitInfo, unique_num=0):
         height * 0.75 - 47,
         unit_role_type.color,
     )
-    draw.text((width * 0.84 - x, height * 0.75 - y), unit_role_type.name, font_colour, font)
-    
+    draw.text(
+        (width * 0.84 - x, height * 0.75 - y), unit_role_type.name, font_colour, font
+    )
+
     is_limit = limit_type_int2str(info.limit_type)
     x, y = get_text_size(is_limit, font)
     text_base(
@@ -152,7 +154,13 @@ async def draw_fullcard(info: UnitInfo, unique_num=0):
         height * 0.79,
         base_dict[atk_type],
     )
-    draw.text((width * 0.92, height * 0.8), TalentType.get(info.talent).name, font_colour, font, align="right")
+    draw.text(
+        (width * 0.92, height * 0.8),
+        TalentType.get(info.talent).name,
+        font_colour,
+        font,
+        align="right",
+    )
     atk_type_sign = Image.open(FilePath.icon.value / f"{atk_type}.png").copy()
     base.paste(
         atk_type_sign,
