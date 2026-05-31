@@ -46,7 +46,9 @@ from .model import (
     UnitInfo,
 )
 from .database import PCRDatabase, cn_data, jp_data, tw_data
-from hoshino import get_bot, on_startup
+from hoshino import get_bot
+from nonebot import on_startup
+
 from .util import (
     cal_damage_by_max_time_return,
     convert2simplified,

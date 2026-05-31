@@ -262,9 +262,10 @@ async def schedule_remind(bot, ev: CQEvent):
         return
     command = ev.message.extract_plain_text().strip()
     type_ = ""
-    if "台" in ev.prefix:
+    prefix = ev.prefix.strip().replace("日历", "").replace("日程", "")
+    if "台" in prefix:
         type_ = "tw"
-    elif "日" in ev.prefix:
+    elif "日" in prefix:
         type_ = "jp"
     else:
         type_ = "cn"
@@ -275,6 +276,7 @@ async def schedule_remind(bot, ev: CQEvent):
         return
     elif command == "关闭":
         config["server_list"] = []
+        group_data[str(ev.group_id)] = config
         save_data(group_data)
         with contextlib.suppress(Exception):
             nonebot.scheduler.remove_job(f"pcr_wiki_schedule_{group_id}")
@@ -294,6 +296,7 @@ async def schedule_remind(bot, ev: CQEvent):
         config["minute"] = minute
         if type_ not in config["server_list"]:
             config["server_list"].append(type_)
+        group_data[str(ev.group_id)] = config
         save_data(group_data)
         nonebot.scheduler.add_job(
             send_calendar,
@@ -318,11 +321,13 @@ async def schedule_remind_expire(bot: HoshinoBot, ev: CQEvent):
         return
     elif command == "开启":
         config["expire_remind"] = True
+        group_data[str(ev.group_id)] = config
         save_data(group_data)
         await bot.send(ev, "活动结束提醒已开启")
         return
     elif command == "关闭":
         config["expire_remind"] = False
+        group_data[str(ev.group_id)] = config
         save_data(group_data)
         await bot.send(ev, "活动结束提醒已关闭")
         return
