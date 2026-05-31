@@ -1051,3 +1051,31 @@ class UnitRoleType(Enum):
             return cls.JAMMER
         else:
             return cls.UNKNOWN
+
+
+class ServerType(Enum):
+    CN = "cn"
+    TW = "tw"
+    JP = "jp"
+
+    @property
+    def name(self) -> str:
+        if self == ServerType.CN:
+            return "国服"
+        elif self == ServerType.TW:
+            return "台服"
+        elif self == ServerType.JP:
+            return "日服"
+        else:
+            return "未知"
+
+    @classmethod
+    def get(cls, name: str) -> "ServerType":
+        if name == cls.CN.value:
+            return cls.CN
+        elif name == cls.TW.value:
+            return cls.TW
+        elif name == cls.JP.value:
+            return cls.JP
+        else:
+            return cls.CN

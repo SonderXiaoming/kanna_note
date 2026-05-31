@@ -1,5 +1,7 @@
 from dataclasses import fields, is_dataclass
 from datetime import datetime, timedelta
+import json
+from pathlib import Path
 import re
 import string
 from typing import Any, AsyncGenerator
@@ -11,6 +13,13 @@ from PIL import Image
 import io
 import base64
 
+DATA_PATH = Path(__file__).parent / "schedule_push.json"
+DEFAULT_GROUP_CONFIG = {
+    "server_list": [],
+    "hour": 8,
+    "minute": 0,
+    "expire_remind": False,
+}
 phase_dict = {letter: i for i, letter in enumerate(string.ascii_uppercase, start=1)}
 phase_dict_reverse = {v: k for k, v in phase_dict.items()}
 
@@ -235,3 +244,20 @@ def cal_damage_by_max_time_return(boss_hp: int, n: int = 1) -> float:
     :return: 计算出的伤害值
     """
     return boss_hp / (21 / 90 + n)
+
+
+def format_remaining(seconds: float) -> str:
+    minutes = int(seconds // 60)
+    if minutes >= 60:
+        return f"{minutes // 60}小时{minutes % 60:02d}分"
+    return f"{minutes}分钟"
+
+
+def load_data():
+    with open(DATA_PATH, "r", encoding="utf8") as f:
+        return json.load(f)
+
+
+def save_data(data: dict):
+    with open(DATA_PATH, "w", encoding="utf8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)

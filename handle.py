@@ -6,6 +6,7 @@ import traceback
 from typing import DefaultDict, Dict, List, Union
 
 from loguru import logger
+import nonebot
 
 from .draw.draw_max_boss_time_return import draw_max_boss_time_return
 
@@ -45,12 +46,13 @@ from .model import (
     UnitInfo,
 )
 from .database import PCRDatabase, cn_data, jp_data, tw_data
-from nonebot import on_startup
+from hoshino import get_bot, on_startup
 from .util import (
     cal_damage_by_max_time_return,
     convert2simplified,
     is_coming_soon,
     is_in_progress,
+    parse_datetime,
     pic2cqcode,
 )
 from .draw.draw_fullcard import draw_fullcard
@@ -573,11 +575,8 @@ def fliter_event_list(
     return in_progress_list, coming_soon_list
 
 
-@judge_platform
-async def get_schedule(type_: str = None, data: PCRDatabase = None):
-    # fes_uid = await data.get_fes_unit_id_list()
-
-    calendar_event_list = (
+async def fetch_calendar_events(data: PCRDatabase):
+    return (
         await data.get_all_events()
         + await data.get_abyss_event()
         + await data.get_free_gacha_event()
@@ -592,6 +591,60 @@ async def get_schedule(type_: str = None, data: PCRDatabase = None):
         + await data.get_all_clan_battle_data()
         + await data.get_dome_event()
     )
+
+
+def format_event_name(
+    event: Union[
+        EventData,
+        CampaignFreegachaData,
+        BirthdayData,
+        GachaHistoryData,
+        CalendarEvent,
+        ClanBattleData,
+    ],
+) -> str:
+    if isinstance(event, EventData):
+        return event.title
+    if isinstance(event, CampaignFreegachaData):
+        return "免费十连"
+    if isinstance(event, GachaHistoryData):
+        return event.gacha_name or "扭蛋"
+    if isinstance(event, ClanBattleData):
+        return f"公会战"
+    if isinstance(event, CalendarEvent):
+        items = event.get_event_list()
+        if not items:
+            return "活动"
+        item = items[0]
+        return f"{item.title}{item.multiple}"
+    return "活动"
+
+
+@judge_platform
+async def get_expiring_events(
+    type_: str = None, data: PCRDatabase = None, within_seconds: int = 3600
+):
+    is_fix_jp = type_ == "jp"
+    now = datetime.now()
+    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+    expiring = []
+    for event in await fetch_calendar_events(data):
+        start_time = getattr(event, "start_time", None)
+        end_time = getattr(event, "end_time", None)
+        if not start_time or not end_time:
+            continue
+        if not is_in_progress(now_str, start_time, end_time, is_fix_jp):
+            continue
+        remaining = (parse_datetime(end_time, is_fix_jp) - now).total_seconds()
+        if 0 < remaining <= within_seconds:
+            expiring.append((format_event_name(event), end_time, remaining))
+    expiring.sort(key=lambda item: item[2])
+    return expiring
+
+
+@judge_platform
+async def get_schedule(type_: str = None, data: PCRDatabase = None):
+    calendar_event_list = await fetch_calendar_events(data)
 
     is_fix_jp = type_ == "jp"
     in_progress_list, coming_soon_list = fliter_event_list(
@@ -635,3 +688,33 @@ async def get_schedule(type_: str = None, data: PCRDatabase = None):
             direction="horizontal",
         )
     )
+
+
+async def send_calendar(group_id, config: dict):
+    bot = get_bot()
+    if not config["server_list"]:
+        return
+    for server in config["server_list"]:
+        msg = await get_schedule(type_=server)
+        try:
+            await bot.send_group_msg(group_id=int(group_id), message=msg)
+            logger.info(f"群{group_id}推送{server}日程成功")
+        except Exception:
+            logger.info(f"群{group_id}推送{server}日程失败")
+
+
+def update_group_schedule(group_data: dict):
+    for group_id, config in group_data.items():
+        if not config.get("server_list"):
+            with contextlib.suppress(Exception):
+                nonebot.scheduler.remove_job(f"pcr_wiki_schedule_{group_id}")
+            continue
+        nonebot.scheduler.add_job(
+            send_calendar,
+            "cron",
+            args=(group_id, config),
+            id=f"pcr_wiki_schedule_{group_id}",
+            replace_existing=True,
+            hour=config["hour"],
+            minute=config["minute"],
+        )

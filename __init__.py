@@ -1,7 +1,23 @@
+import contextlib
+import copy
 import re
+
+from loguru import logger
+import nonebot
+
+from .base import ServerType
 from .download import update_pcr_database
-from .util import convert2gameid, get_chara, phase_dict
-from hoshino import Service
+from .util import (
+    DEFAULT_GROUP_CONFIG,
+    convert2gameid,
+    format_remaining,
+    get_chara,
+    load_data,
+    phase_dict,
+    save_data,
+)
+import hoshino
+from hoshino import Service, get_bot
 from hoshino.typing import CQEvent, HoshinoBot
 from .handle import (
     get_boss_max_time_return_line,
@@ -14,6 +30,9 @@ from .handle import (
     get_schedule,
     init,
     get_chara_introduce,
+    get_expiring_events,
+    send_calendar,
+    update_group_schedule,
 )
 from itertools import product
 
@@ -27,6 +46,9 @@ help_ = """
 [公会战信息] 公会战信息
 [公会战信息2] 公会战信息第2页
 [日程] 活动日历
+[日程提醒设置 关闭/08:00] 开启/关闭定时推送（管理员）
+[日程提醒状态] 查看推送设置
+[日程提醒到期提醒 开启/关闭] 开启/关闭活动结束提醒（管理员）
 [满补线] 满补线查询，后面可以跟会战数字指定期数
 * 可以加上"台"或"日"来查询台服或日服数据
 * 例：@bot台专武情姐 （看专2）
@@ -47,6 +69,7 @@ sv = Service(
 
 data_type = ("", "台", "日")
 type_dict = {"": "cn", "台": "tw", "日": "jp"}
+group_data = None
 
 introduce_query = tuple(
     f"{type_}{command}" for type_, command in product(data_type, ("简介", "介绍"))
@@ -75,6 +98,12 @@ schedule_query = tuple(
     for type_, command in product(data_type, ("日历", "日程", "活动", "活动日历"))
 )
 
+schedule_remind_query = tuple(
+    f"{type_}{command}"
+    for type_, command in product(
+        data_type, ("日程提醒设置", "活动提醒设置", "活动日历提醒设置")
+    )
+)
 max_time_line_query = tuple(
     f"{type_}{command}" for type_, command in product(data_type, ("满补线",))
 )
@@ -226,6 +255,95 @@ async def max_time_line(bot: HoshinoBot, ev: CQEvent):
     )
 
 
+@sv.on_prefix(schedule_remind_query)
+async def schedule_remind(bot, ev: CQEvent):
+    if not hoshino.priv.check_priv(ev, hoshino.priv.ADMIN):
+        await bot.send(ev, "权限不足")
+        return
+    command = ev.message.extract_plain_text().strip()
+    type_ = ""
+    if "台" in ev.prefix:
+        type_ = "tw"
+    elif "日" in ev.prefix:
+        type_ = "jp"
+    else:
+        type_ = "cn"
+    group_id = str(ev.group_id)
+    config = group_data.get(group_id, copy.deepcopy(DEFAULT_GROUP_CONFIG))
+
+    if not command:
+        return
+    elif command == "关闭":
+        config["server_list"] = []
+        save_data(group_data)
+        with contextlib.suppress(Exception):
+            nonebot.scheduler.remove_job(f"pcr_wiki_schedule_{group_id}")
+        await bot.send(ev, "日程推送已关闭")
+        return
+    else:
+        match = re.match(r"(\d{1,2}):(\d{1,2})", command)
+        if not match:
+            await bot.send(ev, "请输入正确的时间，例如: 日程提醒设置 08:00")
+            return
+        hour = int(match.group(1))
+        minute = int(match.group(2))
+        if hour < 0 or hour > 23 or minute < 0 or minute > 59:
+            await bot.send(ev, "请输入正确的时间，例如: 日程提醒设置 08:00")
+            return
+        config["hour"] = hour
+        config["minute"] = minute
+        if type_ not in config["server_list"]:
+            config["server_list"].append(type_)
+        save_data(group_data)
+        nonebot.scheduler.add_job(
+            send_calendar,
+            "cron",
+            args=(str(ev.group_id), group_data[str(ev.group_id)]),
+            id=f"pcr_wiki_schedule_{str(ev.group_id)}",
+            replace_existing=True,
+            hour=hour,
+            minute=minute,
+        )
+        await bot.send(ev, f"日程推送时间已设置为: {hour}:{minute:02d}")
+
+
+@sv.on_prefix("日程提醒到期提醒")
+async def schedule_remind_expire(bot: HoshinoBot, ev: CQEvent):
+    if not hoshino.priv.check_priv(ev, hoshino.priv.ADMIN):
+        await bot.send(ev, "权限不足")
+        return
+    command = ev.message.extract_plain_text().strip()
+    config = group_data.get(str(ev.group_id), copy.deepcopy(DEFAULT_GROUP_CONFIG))
+    if not command:
+        return
+    elif command == "开启":
+        config["expire_remind"] = True
+        save_data(group_data)
+        await bot.send(ev, "活动结束提醒已开启")
+        return
+    elif command == "关闭":
+        config["expire_remind"] = False
+        save_data(group_data)
+        await bot.send(ev, "活动结束提醒已关闭")
+        return
+    else:
+        await bot.send(ev, "请输入正确的指令，例如: 日程提醒到期提醒 开启/关闭")
+        return
+
+
+@sv.on_fullmatch("日程提醒状态")
+async def schedule_remind_status(bot: HoshinoBot, ev: CQEvent):
+    config = group_data.get(str(ev.group_id), DEFAULT_GROUP_CONFIG)
+    servers = "、".join(ServerType.get(s).name for s in config["server_list"]) or "无"
+    expire_status = "开启" if config.get("expire_remind") else "关闭"
+    msg = (
+        f"订阅区服: {servers}\n"
+        f"推送时间: {config['hour']}:{config['minute']:02d}\n"
+        f"活动结束提醒: {expire_status}"
+    )
+    await bot.send(ev, msg)
+
+
 @sv.scheduled_job("cron", hour="11", minute="45", jitter=14)
 @sv.on_fullmatch("更新wiki数据库")
 async def update_data_base(bot=None, ev=None):
@@ -233,3 +351,40 @@ async def update_data_base(bot=None, ev=None):
     await init()
     if bot and ev:
         await bot.send(ev, "更新成功")
+
+
+@sv.scheduled_job("cron", minute=0, hour="*")
+async def check_expiring_events():
+    server_cache = {}
+    bot = get_bot()
+    for group_id, config in group_data.items():
+        if not config.get("expire_remind") or not config["server_list"]:
+            continue
+        try:
+            lines = []
+            for server in config["server_list"]:
+                if server not in server_cache:
+                    expiring = await get_expiring_events(type_=server)
+                    server_cache[server] = [
+                        f"[{ServerType.get(server).name}] {name}\n"
+                        f"结束时间: {end_time}\n"
+                        f"剩余: {format_remaining(remaining)}"
+                        for name, end_time, remaining in expiring
+                    ]
+                lines.extend(server_cache[server])
+            if not lines:
+                continue
+            await bot.send_group_msg(
+                group_id=int(group_id),
+                message="以下活动将在1小时内结束：\n" + "\n".join(lines),
+            )
+            logger.info(f"群{group_id}活动结束提醒已发送")
+        except Exception:
+            logger.exception(f"群{group_id}活动结束提醒失败")
+
+
+@nonebot.on_startup
+async def startup():
+    global group_data
+    group_data = load_data()
+    update_group_schedule(group_data)
