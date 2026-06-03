@@ -260,8 +260,8 @@ class SkillActionType(Enum):
     BUFF_DOT = 128  # 持续伤害易伤
     DAMAGE_TO_DOT = 129  # 伤害转持续伤害
     CHANGE_DEF_MAX = 130  # 改变防御力上限
-    DAMAGE_CHANGE = 131  # 伤害变更
-    SEAL_CONSUME = 132  # 标记消耗
+    DAMAGE_CHANGE = 132  # 伤害变更
+    SEAL_CONSUME = 133  # 标记消耗
 
 
 class StringResources(Enum):
