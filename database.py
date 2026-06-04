@@ -1,22 +1,32 @@
+import asyncio
+import contextlib
 import datetime
+import sqlite3
 from functools import wraps
 import traceback
+from pathlib import Path
 from typing import (
     Any,
     Awaitable,
     Callable,
     Concatenate,
+    List,
     Optional,
     ParamSpec,
+    Tuple,
     TypeVar,
+    Union,
     overload,
 )
 
+from loguru import logger
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from .base import FilePath
 from .table import (
     AilmentData,
+    AbyssEnemyParameter,
+    AcnEnemyParameter,
     CampaignFreegacha,
     CampaignSchedule,
     CharaFortuneSchedule,
@@ -34,11 +44,17 @@ from .table import (
     GachaData,
     GachaExchangeLineup,
     HatsuneSchedule,
+    HuntEnemyParameter,
+    InvasionEnemyParameter,
+    LabyrinthEnemyParameter,
     LoginBonusData,
     LoginBonusDetail,
+    MirageEnemyParameter,
     MissionRewardData,
+    MreEnemyParameter,
     RedeemUnit,
     SecretDungeonSchedule,
+    SekaiEnemyParameter,
     SevenEnemyParameter,
     SevenEventSetting,
     SevenSchedule,
@@ -143,9 +159,28 @@ def convert_invalid_values(column):
 
 KANNA_IDS = [170101, 170201]
 
+ENEMY_PARAMETER_QUERY_SPECS = (
+    (EnemyParameter, EnemyParameter.enemy_id),
+    (TalentQuestEnemyParameter, TalentQuestEnemyParameter.enemy_id),
+    (SevenEnemyParameter, SevenEnemyParameter.enemy_id),
+    (EventEnemyParameter, EventEnemyParameter.enemy_id),
+    (ShioriEnemyParameter, ShioriEnemyParameter.enemy_id),
+    (SreEnemyParameter, SreEnemyParameter.enemy_id),
+    (TowerEnemyParameter, TowerEnemyParameter.enemy_id),
+    (AbyssEnemyParameter, AbyssEnemyParameter.enemy_id),
+    (AcnEnemyParameter, AcnEnemyParameter.enemy_id),
+    (HuntEnemyParameter, HuntEnemyParameter.enemy_id),
+    (InvasionEnemyParameter, InvasionEnemyParameter.enemy_id),
+    (LabyrinthEnemyParameter, LabyrinthEnemyParameter.enemy_id),
+    (MirageEnemyParameter, MirageEnemyParameter.enemy_id),
+    (MreEnemyParameter, MreEnemyParameter.enemy_id),
+    (SekaiEnemyParameter, SekaiEnemyParameter.sekai_enemy_id),
+)
+
 
 class PCRDatabase:
     def __init__(self, url: str):
+        self.db_path = str(url)
         self.url = f"sqlite+aiosqlite:///{url}"
         self.engine = create_async_engine(self.url, pool_recycle=1500)
         self.async_session = async_sessionmaker(
@@ -388,6 +423,17 @@ class PCRDatabase:
             select(TowerEnemyParameter).where(TowerEnemyParameter.enemy_id == enemy_id)
         )
         return result.scalars().first()
+
+    @session
+    async def resolve_enemy_parameter(self, session: AsyncSession, enemy_id: int):
+        for model, id_column in ENEMY_PARAMETER_QUERY_SPECS:
+            with contextlib.suppress(Exception):
+                result = await session.execute(
+                    select(model).where(id_column == enemy_id)
+                )
+                if parameter := result.scalars().first():
+                    return parameter
+        return None
 
     @session
     async def get_enemy_m_parts_query(
@@ -1549,7 +1595,96 @@ class PCRDatabase:
         result = await session.execute(query)
         return result.unit_ids.split("-") if (result := result.first()) else []
 
+    @staticmethod
+    def _merge_table_row_count_sync(
+        conn: sqlite3.Connection, schema: str, table: str
+    ) -> int:
+        return conn.execute(f'SELECT COUNT(*) FROM "{schema}"."{table}"').fetchone()[0]
+
+    @staticmethod
+    def _merge_list_user_tables_sync(
+        conn: sqlite3.Connection, schema: str = "main"
+    ) -> List[str]:
+        master = "sqlite_master" if schema == "main" else f"{schema}.sqlite_master"
+        rows = conn.execute(
+            f"SELECT name FROM {master} WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+        ).fetchall()
+        return [name for (name,) in rows]
+
+    @classmethod
+    def merge_supplement_sync(
+        cls, jp_path: Union[str, Path], supplement_path: Union[str, Path]
+    ) -> List[Tuple[str, int, int]]:
+        jp_path = Path(jp_path)
+        supplement_path = Path(supplement_path).resolve()
+        if not jp_path.exists():
+            raise FileNotFoundError(f"日服数据库不存在: {jp_path}")
+        if not supplement_path.exists():
+            raise FileNotFoundError(f"补充库不存在: {supplement_path}")
+
+        conn = sqlite3.connect(jp_path)
+        merged: List[Tuple[str, int, int]] = []
+        try:
+            conn.execute("PRAGMA busy_timeout = 30000")
+            conn.execute("ATTACH DATABASE ? AS sup", (str(supplement_path),))
+            jp_tables = set(cls._merge_list_user_tables_sync(conn, "main"))
+            for table in cls._merge_list_user_tables_sync(conn, "sup"):
+                sup_count = cls._merge_table_row_count_sync(conn, "sup", table)
+                jp_count = (
+                    cls._merge_table_row_count_sync(conn, "main", table)
+                    if table in jp_tables
+                    else 0
+                )
+                if sup_count <= jp_count:
+                    continue
+
+                create_sql = conn.execute(
+                    "SELECT sql FROM sup.sqlite_master WHERE type='table' AND name=?",
+                    (table,),
+                ).fetchone()[0]
+                conn.execute(f'DROP TABLE IF EXISTS main."{table}"')
+                conn.execute(create_sql)
+                conn.execute(
+                    f'INSERT INTO main."{table}" SELECT * FROM sup."{table}"'
+                )
+                merged.append((table, jp_count, sup_count))
+                logger.info(f"合并表 {table}: {jp_count} -> {sup_count}")
+
+            conn.commit()
+        finally:
+            conn.close()
+
+        logger.info(f"日服补充库合并完成，共 {len(merged)} 张表")
+        return merged
+
+    async def merge_supplement(
+        self, supplement_path: Union[str, Path]
+    ) -> List[Tuple[str, int, int]]:
+        """将补充库中比当前库行数更多的表合并进来。"""
+        await self.engine.dispose()
+        return await asyncio.to_thread(
+            self.merge_supplement_sync, self.db_path, supplement_path
+        )
+
+
+async def merge_supplement_db(
+    jp_path: Union[str, Path], supplement_path: Union[str, Path]
+) -> List[Tuple[str, int, int]]:
+    return await asyncio.to_thread(
+        PCRDatabase.merge_supplement_sync, jp_path, supplement_path
+    )
+
 
 cn_data = PCRDatabase(FilePath.cn_db.value)
 jp_data = PCRDatabase(FilePath.jp_db.value)
 tw_data = PCRDatabase(FilePath.tw_db.value)
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    async def _main():
+        await jp_data.merge_supplement(FilePath.jp_supplement_db.value)
+        await jp_data.engine.dispose()
+
+    asyncio.run(_main())

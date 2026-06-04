@@ -1,23 +1,32 @@
-from io import BytesIO
 import os
-from .base import FetchUrl, FilePath
+from io import BytesIO
+
+from pathlib import Path
+
 import brotli
-from .util import download_stream
 import httpx
+
+from .base import FetchUrl, FilePath
+from .database import jp_data
+from .util import download_stream
+
+
+async def download_brotli_db(url: str, path: Path):
+    decompressor = brotli.Decompressor()
+    with open(FilePath.temp_db.value, "wb") as f:
+        async for chunk in download_stream(url):
+            f.write(decompressor.process(chunk))
+    os.replace(FilePath.temp_db.value, path)
 
 
 async def update_pcr_database():
     for url, path in zip(
-        (FetchUrl.jp_url.value, FetchUrl.tw_url.value, FetchUrl.cn_url.value),
-        (FilePath.jp_db.value, FilePath.tw_db.value, FilePath.cn_db.value),
+        (FetchUrl.jp_url.value, FetchUrl.tw_url.value, FetchUrl.cn_url.value, FetchUrl.jp_supplement_url.value),
+        (FilePath.jp_db.value, FilePath.tw_db.value, FilePath.cn_db.value, FilePath.jp_supplement_db.value),
     ):
-        decompressor = brotli.Decompressor()
-        with open(FilePath.temp_db.value, "wb") as f:
-            async for chunk in download_stream(url):
-                f.write(decompressor.process(chunk))
+        await download_brotli_db(url, path)
 
-        os.replace(FilePath.temp_db.value, path)  # 替换文件
-    # os.remove(FilePath.temp_db.value)  # 删除临时文件
+    await jp_data.merge_supplement(FilePath.jp_supplement_db.value)
 
 
 def generate_pcr_fullcard(id_, star):

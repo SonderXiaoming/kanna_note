@@ -9,6 +9,7 @@ class FilePath(Enum):
     cn_db = data / "pcr_cn.db"
     tw_db = data / "pcr_tw.db"
     jp_db = data / "pcr_jp.db"
+    jp_supplement_db = data / "pcr_jp_supplement.db"
     temp_db = data / "temp.db"
 
     img = base / "img"
@@ -28,6 +29,7 @@ class FilePath(Enum):
 
 class FetchUrl(Enum):
     jp_url = "https://wthee.xyz/db/redive_jp.db.br"
+    jp_supplement_url = "https://roboninon.win/db/download?compressed=true"
     tw_url = "https://wthee.xyz/db/redive_tw.db.br"
     cn_url = "https://wthee.xyz/db/redive_cn.db.br"
     fullcard_url = "https://redive.estertion.win/card/full/"

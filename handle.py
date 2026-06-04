@@ -372,23 +372,11 @@ async def get_enemy_id(
 async def get_enemy_skill(
     id_: int, type_: str = None, data: PCRDatabase = None, enemy_id: int = None
 ):
-    # TODO: main_parameter 有不同种类，目前他们的字段是大部分一样的，可以用继承简化，同时type hint有点问题
-    if not (main_parameter := await data.get_enemy_parameter_query(enemy_id)):
-        main_parameter = await data.get_talent_quest_enemy_parameter_query(enemy_id)
-    with contextlib.suppress(Exception):
-        if not main_parameter:
-            main_parameter = await data.get_seven_enemy_parameter_query(enemy_id)
-    """if not main_parameter:
-        main_parameter = await data.get_event_enemy_parameter_query(enemy_id)
-    if not main_parameter:
-        main_parameter = await data.get_shiori_enemy_parameter_query(enemy_id)
-    if not main_parameter:
-        main_parameter = await data.get_sre_enemy_parameter_query(enemy_id)
-    if not main_parameter:
-        main_parameter = await data.get_tower_enemy_parameter_query(enemy_id)
-"""
+    if not (main_parameter := await data.resolve_enemy_parameter(enemy_id)):
+        return f"未找到id为{enemy_id}的敌人数据"
     unit_info = await data.get_enemy_info_query(main_parameter.unit_id)
-    talent_weakness = await data.get_enemy_weakness_query(main_parameter.enemy_id)
+    weakness_id = getattr(main_parameter, "enemy_id", enemy_id)
+    talent_weakness = await data.get_enemy_weakness_query(weakness_id)
     attack_pattern = await data.get_attack_pattern(
         unit_info.cutin_star6 or unit_info.unit_id
     )
@@ -430,21 +418,20 @@ async def get_enemy_skill(
     skill_level_dict = get_skill_level(unit_skills, main_parameter)
 
     sub = await data.get_enemy_m_parts_query(enemy_id)
-    sub_parameters = (
-        [
-            await data.get_enemy_parameter_query(part_id)
-            for part_id in [
-                sub.child_enemy_parameter_1,
-                sub.child_enemy_parameter_2,
-                sub.child_enemy_parameter_3,
-                sub.child_enemy_parameter_4,
-                sub.child_enemy_parameter_5,
-            ]
-            if part_id
-        ]
-        if sub
-        else []
-    )
+    sub_parameters = []
+    if sub:
+        for part_id in [
+            sub.child_enemy_parameter_1,
+            sub.child_enemy_parameter_2,
+            sub.child_enemy_parameter_3,
+            sub.child_enemy_parameter_4,
+            sub.child_enemy_parameter_5,
+        ]:
+            if not part_id:
+                continue
+            with contextlib.suppress(Exception):
+                if part := await data.resolve_enemy_parameter(part_id):
+                    sub_parameters.append(part)
     return pic2cqcode(
         merge_pic(
             [
