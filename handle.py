@@ -62,6 +62,7 @@ from .skill_text_handle import get_skill_ids, get_skill_level
 from .draw.draw_introduce import draw_introduce
 from .draw.draw_story import draw_story
 from .draw.draw_skill import draw_all_skill, draw_pattern
+from ..multicq_send import group_send
 
 database_dict = {"cn": cn_data, "jp": jp_data, "tw": tw_data}
 
@@ -680,13 +681,12 @@ async def get_schedule(type_: str = None, data: PCRDatabase = None):
 
 
 async def send_calendar(group_id, config: dict):
-    bot = get_bot()
     if not config["server_list"]:
         return
     for server in config["server_list"]:
         msg = await get_schedule(type_=server)
         try:
-            await bot.send_group_msg(group_id=int(group_id), message=msg)
+            await group_send(group_id, msg)
             logger.info(f"群{group_id}推送{server}日程成功")
         except Exception:
             logger.info(f"群{group_id}推送{server}日程失败")
