@@ -4,7 +4,7 @@ import re
 
 from loguru import logger
 import nonebot
-
+from zoneinfo import ZoneInfo
 from .base import ServerType
 from .download import update_pcr_database
 from .util import (
@@ -298,6 +298,7 @@ async def schedule_remind(bot, ev: CQEvent):
             config["server_list"].append(type_)
         group_data[str(ev.group_id)] = config
         save_data(group_data)
+
         nonebot.scheduler.add_job(
             send_calendar,
             "cron",
@@ -306,6 +307,9 @@ async def schedule_remind(bot, ev: CQEvent):
             replace_existing=True,
             hour=hour,
             minute=minute,
+            timezone=ZoneInfo("Asia/Shanghai"),
+            misfire_grace_time=60,
+            coalesce=True,
         )
         await bot.send(ev, f"日程推送时间已设置为: {hour}:{minute:02d}")
 

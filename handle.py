@@ -7,6 +7,7 @@ from typing import DefaultDict, Dict, List, Union
 
 from loguru import logger
 import nonebot
+from zoneinfo import ZoneInfo
 
 from .draw.draw_max_boss_time_return import draw_max_boss_time_return
 
@@ -706,4 +707,7 @@ def update_group_schedule(group_data: dict):
             replace_existing=True,
             hour=config["hour"],
             minute=config["minute"],
+            timezone=ZoneInfo("Asia/Shanghai"),
+            misfire_grace_time=60,
+            coalesce=True,
         )
