@@ -10,7 +10,6 @@ class FilePath(Enum):
     tw_db = data / "pcr_tw.db"
     jp_db = data / "pcr_jp.db"
     jp_supplement_db = data / "pcr_jp_supplement.db"
-    temp_db = data / "temp.db"
 
     img = base / "img"
     icon = img / "icon"
@@ -28,10 +27,9 @@ class FilePath(Enum):
 
 
 class FetchUrl(Enum):
-    jp_url = "https://wthee.xyz/db/redive_jp.db.br"
-    jp_supplement_url = "https://roboninon.win/db/download?compressed=true"
-    tw_url = "https://wthee.xyz/db/redive_tw.db.br"
-    cn_url = "https://wthee.xyz/db/redive_cn.db.br"
+    jp_url = "https://pcr.cialloworld.com/api/databases?region=jp&download=1"
+    tw_url = "https://pcr.cialloworld.com/api/databases?region=tw&download=1"
+    cn_url = "https://pcr.cialloworld.com/api/databases?region=cn&download=1"
     fullcard_url = "https://redive.estertion.win/card/full/"
     skill_icon_url = "https://redive.estertion.win/icon/skill/"
     equipment_url = "https://redive.estertion.win/icon/equipment/"

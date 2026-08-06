@@ -1,17 +1,18 @@
-from dataclasses import fields, is_dataclass
-from datetime import datetime, timedelta
+import base64
+import io
 import json
-from pathlib import Path
 import re
 import string
+from dataclasses import fields, is_dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any, AsyncGenerator
+
 import httpx
-from pydantic import BaseModel
 import zhconv
 from hoshino.modules.priconne import chara
 from PIL import Image
-import io
-import base64
+from pydantic import BaseModel
 
 DATA_PATH = Path(__file__).parent / "schedule_push.json"
 DEFAULT_GROUP_CONFIG = {
@@ -25,9 +26,14 @@ phase_dict_reverse = {v: k for k, v in phase_dict.items()}
 
 
 async def download_stream(
-    url: str, chunk_size: int = 1024
+    url: str,
+    chunk_size: int = 1024,
+    timeout: float = 10,
+    follow_redirects: bool = False,
 ) -> AsyncGenerator[bytes, None]:
-    async with httpx.AsyncClient(timeout=10) as client:
+    async with httpx.AsyncClient(
+        timeout=timeout, follow_redirects=follow_redirects
+    ) as client:
         async with client.stream("GET", url) as rsp:
             rsp.raise_for_status()
             async for chunk in rsp.aiter_bytes(chunk_size):
@@ -79,9 +85,7 @@ def convert2simplified(obj: Any):
             return [convert(v) for v in value]
         elif isinstance(value, dict):
             return {k: convert(v) for k, v in value.items()}
-        elif is_dataclass(value):
-            return convert2simplified(value)
-        elif isinstance(value, BaseModel):
+        elif is_dataclass(value) or isinstance(value, BaseModel):
             return convert2simplified(value)
         return value
 
@@ -91,9 +95,7 @@ def convert2simplified(obj: Any):
         }
         return obj.__class__(**updated_data)
     elif isinstance(obj, BaseModel):
-        updated_data = {
-            field: convert(getattr(obj, field)) for field in obj.__fields__.keys()
-        }
+        updated_data = {field: convert(getattr(obj, field)) for field in obj.__fields__}
         return obj.__class__(**updated_data)
     else:
         raise TypeError(f"Unsupported type {type(obj)}")

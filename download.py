@@ -1,32 +1,56 @@
+import asyncio
 import os
+import sqlite3
 from io import BytesIO
-
 from pathlib import Path
 
-import brotli
 import httpx
 
 from .base import FetchUrl, FilePath
-from .database import jp_data
+from .database import cn_data, jp_data, tw_data
 from .util import download_stream
 
 
-async def download_brotli_db(url: str, path: Path):
-    decompressor = brotli.Decompressor()
-    with open(FilePath.temp_db.value, "wb") as f:
-        async for chunk in download_stream(url):
-            f.write(decompressor.process(chunk))
-    os.replace(FilePath.temp_db.value, path)
+def validate_sqlite_database(path: Path):
+    with open(path, "rb") as f:
+        if f.read(16) != b"SQLite format 3\x00":
+            raise ValueError(f"下载内容不是 SQLite 数据库: {path}")
+
+    with sqlite3.connect(path) as conn:
+        result = conn.execute("PRAGMA quick_check").fetchone()
+    if not result or result[0] != "ok":
+        raise ValueError(f"SQLite 数据库校验失败: {path}")
+
+
+async def download_database(url: str, temp_path: Path):
+    with open(temp_path, "wb") as f:
+        async for chunk in download_stream(
+            url, chunk_size=64 * 1024, timeout=60, follow_redirects=True
+        ):
+            f.write(chunk)
+    await asyncio.to_thread(validate_sqlite_database, temp_path)
 
 
 async def update_pcr_database():
-    for url, path in zip(
-        (FetchUrl.jp_url.value, FetchUrl.tw_url.value, FetchUrl.cn_url.value, FetchUrl.jp_supplement_url.value),
-        (FilePath.jp_db.value, FilePath.tw_db.value, FilePath.cn_db.value, FilePath.jp_supplement_db.value),
-    ):
-        await download_brotli_db(url, path)
+    databases = (
+        (FetchUrl.jp_url.value, FilePath.jp_db.value, jp_data),
+        (FetchUrl.tw_url.value, FilePath.tw_db.value, tw_data),
+        (FetchUrl.cn_url.value, FilePath.cn_db.value, cn_data),
+    )
+    downloaded = []
+    try:
+        for url, path, _ in databases:
+            temp_path = path.with_name(f"temp_{path.name}")
+            downloaded.append((temp_path, path))
+            await download_database(url, temp_path)
 
-    await jp_data.merge_supplement(FilePath.jp_supplement_db.value)
+        for _, _, data in databases:
+            await data.engine.dispose()
+        for temp_path, path in downloaded:
+            os.replace(temp_path, path)
+    finally:
+        for temp_path, _ in downloaded:
+            temp_path.unlink(missing_ok=True)
 
 
 def generate_pcr_fullcard(id_, star):
