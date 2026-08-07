@@ -285,7 +285,7 @@ class PCRDatabase:
         # 构建查询
         query = (
             select(
-                UnitProfile.unit_id,
+                UnitData.unit_id,
                 UnitData.unit_name,
                 coalesce(UnitData.kana, "").label("kana"),
                 UnitData.rarity,
@@ -304,8 +304,8 @@ class PCRDatabase:
                 UnitData.search_area_width,
                 UnitData.atk_type,
                 UnitData.normal_atk_cast_time,
-                UnitTalent.talent_id,
-                UnitRoleData.unit_role_id,
+                coalesce(UnitTalent.talent_id, 0).label("talent_id"),
+                coalesce(UnitRoleData.unit_role_id, 0).label("unit_role_id"),
                 coalesce(UnitData.comment, "......").label("intro"),
                 coalesce(UnitData.start_time, text("'2015/04/01'")).label(
                     "unit_start_time"
@@ -314,20 +314,23 @@ class PCRDatabase:
                 UnitData.cutin1_star6,
                 limit_type_case,
             )
-            .join(UnitData, UnitData.unit_id == UnitProfile.unit_id, isouter=True)
+            .select_from(UnitData)
+            .join(UnitProfile, UnitProfile.unit_id == UnitData.unit_id, isouter=True)
             .join(
                 ActualUnitBackground,
                 ((UnitData.unit_id // 100) == (ActualUnitBackground.unit_id // 100)),
                 isouter=True,
             )
-            .join(UnitTalent, UnitTalent.unit_id == UnitProfile.unit_id)
-            .join(UnitRoleData, UnitRoleData.unit_id == UnitProfile.unit_id)
+            .join(UnitTalent, UnitTalent.unit_id == UnitData.unit_id, isouter=True)
+            .join(UnitRoleData, UnitRoleData.unit_id == UnitData.unit_id, isouter=True)
             .where(UnitData.unit_id == unit_id)
         )
         result = await session.execute(query)
-        unit_info = UnitInfo(
-            **dict(zip(UnitInfo.__annotations__.keys(), result.first()))
-        )
+        row = result.first()
+        if row is None:
+            logger.warning(f"unit_data does not contain unit_id={unit_id}")
+            return UnitInfo(unit_id=unit_id)
+        unit_info = UnitInfo(**dict(zip(UnitInfo.__annotations__.keys(), row)))
         if unit_info.unit_id in KANNA_IDS:
             unit_info.limit_type = 2
         elif unit_info.unit_id in self.ex_character:
