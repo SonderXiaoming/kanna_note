@@ -2,7 +2,6 @@ import asyncio
 import contextlib
 import datetime
 import sqlite3
-import traceback
 from functools import wraps
 from pathlib import Path
 from typing import (
@@ -191,7 +190,8 @@ class PCRDatabase:
         self.max_unique_equip_lv = [1, 1]
 
     async def init(self):
-        await self.ensure_skill_columns()  # 等国服更新就可以删除了
+        # 三服数据库都原生提供下列扩展技能字段后，删除此调用和对应方法。
+        await self.ensure_skill_columns()
         self.all_chaeacters = await self.get_all_units_list()
         self.ex_character = await self.get_ex_units_list()
         self.max_unique_equip_lv[0] = await self.get_max_unique_equip_lv(1)
@@ -199,44 +199,35 @@ class PCRDatabase:
 
     @session
     async def ensure_skill_columns(self, session: AsyncSession):
-        """确保 unit_skill_data 表包含可选的技能列，兼容不同版本的数据库"""
-        try:
-            # 检查列是否存在
-            result = await session.execute(text("PRAGMA table_info(unit_skill_data)"))
-            columns = {row[1] for row in result.fetchall()}
-
-            # 添加缺失的列
-            if "main_skill_evolution_1_pro" not in columns:
+        """补齐各区服尚未上线的新版正式技能字段。"""
+        result = await session.execute(text("PRAGMA table_info(unit_skill_data)"))
+        unit_skill_columns = {row[1] for row in result.fetchall()}
+        for column in (
+            "main_skill_revolution_1",
+            "main_skill_revolution_2",
+            "sp_skill_revolution_1",
+            "sp_skill_revolution_2",
+        ):
+            if column not in unit_skill_columns:
                 await session.execute(
                     text(
-                        "ALTER TABLE unit_skill_data ADD COLUMN main_skill_evolution_1_pro INTEGER DEFAULT 0"
+                        f"ALTER TABLE unit_skill_data ADD COLUMN {column} "
+                        "INTEGER NOT NULL DEFAULT 0"
                     )
                 )
 
-            if "sp_skill_evolution_1_pro" not in columns:
-                await session.execute(
-                    text(
-                        "ALTER TABLE unit_skill_data ADD COLUMN sp_skill_evolution_1_pro INTEGER DEFAULT 0"
-                    )
-                )
-
-            # 兼容旧版本数据库，添加 action_11 到 action_20 和 depend_action_11 到 depend_action_20 列
-            result = await session.execute(text("PRAGMA table_info(skill_data)"))
-            columns = {row[1] for row in result.fetchall()}
-            for num in range(11, 21):
-                if f"action_{num}" not in columns:
-                    await session.execute(
-                        text(f"ALTER TABLE skill_data ADD COLUMN action_{num} INTEGER")
-                    )
-                if f"depend_action_{num}" not in columns:
+        result = await session.execute(text("PRAGMA table_info(skill_data)"))
+        skill_columns = {row[1] for row in result.fetchall()}
+        for num in range(11, 21):
+            for prefix in ("action", "depend_action"):
+                column = f"{prefix}_{num}"
+                if column not in skill_columns:
                     await session.execute(
                         text(
-                            f"ALTER TABLE skill_data ADD COLUMN depend_action_{num} INTEGER"
+                            f"ALTER TABLE skill_data ADD COLUMN {column} "
+                            "INTEGER NOT NULL DEFAULT 0"
                         )
                     )
-        except Exception as e:
-            traceback.print_exc()
-            print(f"Error ensuring skill columns: {e}")
 
     @session
     async def get_ex_units_list(self, session: AsyncSession) -> list[int]:

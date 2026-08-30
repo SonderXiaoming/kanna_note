@@ -81,14 +81,6 @@ class UnitUniqueEquipment(PCRModel, table=True):
     equip_id: int
 
 
-class UnitUniqueEquip(PCRModel, table=True):
-    # 已经废弃，使用UnitUniqueEquipment代替
-    __tablename__ = "unit_unique_equip"
-    unit_id: int = Field(primary_key=True)
-    equip_slot: int = Field(primary_key=True)
-    equip_id: int
-
-
 class UniqueEquipEnhanceRate(PCRModel, table=True):
     __tablename__ = "unique_equip_enhance_rate"
     id: int = Field(primary_key=True)
@@ -280,10 +272,11 @@ class UnitSkillData(PCRModel, table=True):
     main_skill_9: int
     main_skill_10: int
 
-    # 主技能进化 (Main Skill Evolutions)
+    # 主技能进化与二次进化 (Main Skill Evolutions / Revolutions)
     main_skill_evolution_1: int
-    main_skill_evolution_1_pro: Optional[int] = 0
     main_skill_evolution_2: int
+    main_skill_revolution_1: int
+    main_skill_revolution_2: int
 
     # EX 技能 (EX Skills)
     ex_skill_1: int
@@ -306,10 +299,11 @@ class UnitSkillData(PCRModel, table=True):
     sp_skill_4: int
     sp_skill_5: int
 
-    # SP 技能进化 (Special Skill Evolutions)
+    # SP 技能进化与二次进化 (Special Skill Evolutions / Revolutions)
     sp_skill_evolution_1: int
     sp_skill_evolution_2: int
-    sp_skill_evolution_1_pro: Optional[int] = 0
+    sp_skill_revolution_1: int
+    sp_skill_revolution_2: int
 
 
 class SkillData(PCRModel, table=True):
@@ -672,8 +666,6 @@ class DomeSchedule(PCRModel):
     count_start_time: str
     end_time: str
     close_time: str
-    calc_start: str
-    result_start: str
 
 
 class DomeScheduleData(DomeSchedule, table=True):
@@ -887,9 +879,6 @@ class GachaData(PCRModel, table=True):
     description: Optional[str] = None
     description_2: Optional[str] = None
     description_sp: Optional[str] = None
-    unknown_1: Optional[str] = None
-    unknown_2: int
-    parallel_id: int
     pickup_badge: int
     gacha_detail: Optional[str] = None
     gacha_cost_type: int
@@ -1634,7 +1623,7 @@ class ExUniqueEquipment1(PCRModel, table=True):
     wave_energy_recovery: int
     attack: int
     penetration: int
-    unknown_2: int
+    required_item_count: int
     wave_hp_recovery: int
     hp_recovery_rate: int
     accuracy: int
@@ -1643,36 +1632,36 @@ class ExUniqueEquipment1(PCRModel, table=True):
     critical: int
     defense: int
     energy_recovery_rate: int
-    unknown_1: int
+    required_item_id: int
     magic_defense: int
     energy_reduce_rate: int
 
 
 class SevenSchedule(PCRModel, table=True):
     __tablename__ = "seven_schedule"
-    event_id: int = Field(primary_key=True)
+    schedule_id: int = Field(primary_key=True)
+    event_id: int
+    event_type: int
+    gacha_id: int
+    gacha_ticket_id: int
+    mission_group_id: int
     teaser_time: str
     start_time: str
     end_time: str
-    page_title_cv_info: str
-    page_title_cv_2_info: str
 
 
 class SevenEventSetting(PCRModel, table=True):
     __tablename__ = "seven_event_setting"
     event_id: int = Field(primary_key=True)
     title: str
-    sub_title: str
-    introduction: str
-    introduction_2: str
-    introduction_3: str
-    introduction_4: str
-    introduction_5: str
-    introduction_6: str
-    introduction_7: str
-    introduction_8: str
-    introduction_9: str
-    introduction_10: str
-    boss_enemy_id: int
-    boss_unit_id: int
+    banner_unit_id: int
+    bgm_cue_sheet: str
+    bgm_cue_name: str
+    sp_plus_limit_challenge_count: int
+    quest_featured_item_type_1: int
+    quest_featured_item_id_1: int
+    quest_featured_item_type_2: int
+    quest_featured_item_id_2: int
+    quest_featured_item_type_3: int
+    quest_featured_item_id_3: int
 

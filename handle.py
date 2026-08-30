@@ -218,24 +218,28 @@ async def get_chara_unique_equip(
             skills["normal"].append(skill_info.main_skill_1)
         if skill_info.main_skill_evolution_1:
             skills["normal"].append(skill_info.main_skill_evolution_1)
-        if skill_info.main_skill_evolution_1_pro:
-            skills["normal"].append(skill_info.main_skill_evolution_1_pro)
+        if skill_info.main_skill_revolution_1:
+            skills["normal"].append(skill_info.main_skill_revolution_1)
 
         if skill_info.sp_skill_1:
             skills["sp"].append(skill_info.sp_skill_1)
         if skill_info.sp_skill_evolution_1:
             skills["sp"].append(skill_info.sp_skill_evolution_1)
-        if skill_info.sp_skill_evolution_1_pro:
-            skills["sp"].append(skill_info.sp_skill_evolution_1_pro)
+        if skill_info.sp_skill_revolution_1:
+            skills["sp"].append(skill_info.sp_skill_revolution_1)
     if equip_list[1]:
         if skill_info.main_skill_2:
             skills["normal"].append(skill_info.main_skill_2)
         if skill_info.main_skill_evolution_2:
             skills["normal"].append(skill_info.main_skill_evolution_2)
+        if skill_info.main_skill_revolution_2:
+            skills["normal"].append(skill_info.main_skill_revolution_2)
         if skill_info.sp_skill_2:
             skills["sp"].append(skill_info.sp_skill_2)
         if skill_info.sp_skill_evolution_2:
             skills["sp"].append(skill_info.sp_skill_evolution_2)
+        if skill_info.sp_skill_revolution_2:
+            skills["sp"].append(skill_info.sp_skill_revolution_2)
 
     equip_list = [equip for equip in equip_list if equip]
 

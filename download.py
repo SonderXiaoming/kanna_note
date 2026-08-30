@@ -23,11 +23,21 @@ def validate_sqlite_database(path: Path):
 
 
 async def download_database(url: str, temp_path: Path):
+    try:
+        import brotli
+    except ImportError as e:
+        raise RuntimeError(
+            "下载 Brotli 压缩数据库需要安装 Brotli: pip install Brotli"
+        ) from e
+
+    decompressor = brotli.Decompressor()
     with open(temp_path, "wb") as f:
         async for chunk in download_stream(
             url, chunk_size=64 * 1024, timeout=60, follow_redirects=True
         ):
-            f.write(chunk)
+            f.write(decompressor.process(chunk))
+    if not decompressor.is_finished():
+        raise ValueError("Brotli 数据库压缩流不完整")
     await asyncio.to_thread(validate_sqlite_database, temp_path)
 
 

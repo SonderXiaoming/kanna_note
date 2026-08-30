@@ -27,9 +27,9 @@ class FilePath(Enum):
 
 
 class FetchUrl(Enum):
-    jp_url = "https://pcr.cialloworld.com/api/databases?region=jp&download=1"
-    tw_url = "https://pcr.cialloworld.com/api/databases?region=tw&download=1"
-    cn_url = "https://pcr.cialloworld.com/api/databases?region=cn&download=1"
+    jp_url = "https://pcr.cialloworld.com/api/databases?region=jp&compression=br&download=1"
+    tw_url = "https://pcr.cialloworld.com/api/databases?region=tw&compression=br&download=1"
+    cn_url = "https://pcr.cialloworld.com/api/databases?region=cn&compression=br&download=1"
     fullcard_url = "https://redive.estertion.win/card/full/"
     skill_icon_url = "https://redive.estertion.win/icon/skill/"
     equipment_url = "https://redive.estertion.win/icon/equipment/"

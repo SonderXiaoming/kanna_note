@@ -24,12 +24,14 @@ def get_skill_level(skill_data: UnitSkillData, parameter: EnemyParameter) -> dic
         skill_data.sp_skill_1 != 1064101 or skill_data.main_skill_evolution_1 != 1065012
     ):
         skill_dict[skill_data.main_skill_evolution_1] = parameter.main_skill_lv_1
-    if skill_data.main_skill_evolution_1_pro:
-        skill_dict[skill_data.main_skill_evolution_1_pro] = parameter.main_skill_lv_1
+    if skill_data.main_skill_revolution_1:
+        skill_dict[skill_data.main_skill_revolution_1] = parameter.main_skill_lv_1
     if skill_data.main_skill_2:
         skill_dict[skill_data.main_skill_2] = parameter.main_skill_lv_2
     if skill_data.main_skill_evolution_2:
         skill_dict[skill_data.main_skill_evolution_2] = parameter.main_skill_lv_2
+    if skill_data.main_skill_revolution_2:
+        skill_dict[skill_data.main_skill_revolution_2] = parameter.main_skill_lv_2
     if skill_data.main_skill_3:
         skill_dict[skill_data.main_skill_3] = parameter.main_skill_lv_3
     if skill_data.main_skill_4:
@@ -90,9 +92,9 @@ def get_skill_ids(skill: UnitSkillData):
     ):  # 日服雪菲
         skill_dict["normal"].append(skill.main_skill_evolution_1)
         skill_type_dict[skill.main_skill_evolution_1] = "技能1+"
-    if skill.main_skill_evolution_1_pro:
-        skill_dict["normal"].append(skill.main_skill_evolution_1_pro)
-        skill_type_dict[skill.main_skill_evolution_1_pro] = "技能1++"
+    if skill.main_skill_revolution_1:
+        skill_dict["normal"].append(skill.main_skill_revolution_1)
+        skill_type_dict[skill.main_skill_revolution_1] = "技能1++"
 
     if skill.main_skill_2:
         skill_dict["normal"].append(skill.main_skill_2)
@@ -100,6 +102,9 @@ def get_skill_ids(skill: UnitSkillData):
     if skill.main_skill_evolution_2:
         skill_dict["normal"].append(skill.main_skill_evolution_2)
         skill_type_dict[skill.main_skill_evolution_2] = "技能2+"
+    if skill.main_skill_revolution_2:
+        skill_dict["normal"].append(skill.main_skill_revolution_2)
+        skill_type_dict[skill.main_skill_revolution_2] = "技能2++"
     if skill.main_skill_3:
         skill_dict["normal"].append(skill.main_skill_3)
         skill_type_dict[skill.main_skill_3] = "技能3"
@@ -164,15 +169,18 @@ def get_skill_ids(skill: UnitSkillData):
     if skill.sp_skill_evolution_1:
         skill_dict["sp"].append(skill.sp_skill_evolution_1)
         skill_type_dict[skill.sp_skill_evolution_1] = "SP技能1+"
-    if skill.sp_skill_evolution_1_pro:
-        skill_dict["sp"].append(skill.sp_skill_evolution_1_pro)
-        skill_type_dict[skill.sp_skill_evolution_1_pro] = "SP技能1++"
+    if skill.sp_skill_revolution_1:
+        skill_dict["sp"].append(skill.sp_skill_revolution_1)
+        skill_type_dict[skill.sp_skill_revolution_1] = "SP技能1++"
     if skill.sp_skill_2:
         skill_dict["sp"].append(skill.sp_skill_2)
         skill_type_dict[skill.sp_skill_2] = "SP技能2"
     if skill.sp_skill_evolution_2:
         skill_dict["sp"].append(skill.sp_skill_evolution_2)
         skill_type_dict[skill.sp_skill_evolution_2] = "SP技能2+"
+    if skill.sp_skill_revolution_2:
+        skill_dict["sp"].append(skill.sp_skill_revolution_2)
+        skill_type_dict[skill.sp_skill_revolution_2] = "SP技能2++"
     if skill.sp_skill_3:
         skill_dict["sp"].append(skill.sp_skill_3)
         skill_type_dict[skill.sp_skill_3] = "SP技能3"

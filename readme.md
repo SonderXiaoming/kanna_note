@@ -16,6 +16,10 @@ https://github.com/SonderXiaoming/kanna_note
 
 git clone https://github.com/SonderXiaoming/kanna_note
 
+安装 Brotli 数据库解压依赖：
+
+pip install Brotli
+
 2.启用：
 
 在 HoshinoBot\hoshino\config\ **bot**.py 文件的 MODULES_ON 加入 'kanna_note'
